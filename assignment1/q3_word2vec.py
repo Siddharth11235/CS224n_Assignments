@@ -64,7 +64,7 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     targetVec = np.zeros(np.shape(outputVectors)[0])
     targetVec[target] = 1
     dout = softmaxScore - targetVec
-    cost = np.sum(-targetVec*np.log(softmaxScore))
+    cost = -np.sum(targetVec*np.log(softmaxScore))
     gradPred = np.dot( dout,outputVectors)
     grad = np.dot(dout.T, predicted)
     #gradPred = 
