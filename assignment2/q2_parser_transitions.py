@@ -1,3 +1,5 @@
+import copy
+
 class PartialParse(object):
     def __init__(self, sentence):
         """Initializes this partial parse.
@@ -22,14 +24,8 @@ class PartialParse(object):
 
         ### YOUR CODE HERE
         
-        if sentence != []:
-            self.stack = ['ROOT']
-            self.buffer = []
-            for word in sentence:
-                self.buffer.append(word)
-        else:
-            self.stack = []
-            self.buffer = []
+        self.stack = ["ROOT"]
+        self.buffer = [word for word in sentence]
         self.dependencies = []
         ### END YOUR CODE
 
@@ -86,6 +82,25 @@ def minibatch_parse(sentences, model, batch_size):
     """
 
     ### YOUR CODE HERE
+    
+    partial_parses = [PartialParse(sentence) for  sentence in sentences]
+    unfinished_parses = partial_parses[:]
+
+    while unfinished_parses != []:
+        minibatch = unfinished_parses[0:batch_size]
+
+        transition_list = model.predict(minibatch)
+        for partial_parse, transition in zip(minibatch, transition_list):
+            partial_parse.parse_step(transition)
+            if len(partial_parse.stack) < 2 and len(partial_parse.buffer) < 1:
+                unfinished_parses.remove(partial_parse)
+    dependencies = [parse.dependencies for parse in partial_parses]
+
+
+        
+    
+
+
     ### END YOUR CODE
 
     return dependencies

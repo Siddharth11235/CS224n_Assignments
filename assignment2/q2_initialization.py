@@ -25,6 +25,8 @@ def xavier_weight_init():
             out: tf.Tensor of specified shape sampled from the Xavier distribution.
         """
         ### YOUR CODE HERE
+        val = 6.0/sum(shape)
+        out = tf.random_normal(shape, mean=0.0, stddev=val, seed = None, name=None)
         ### END YOUR CODE
         return out
     # Returns defined initializer function.
