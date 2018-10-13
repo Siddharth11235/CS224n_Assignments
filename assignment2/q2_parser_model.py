@@ -54,8 +54,8 @@ class ParserModel(Model):
         (Don't change the variable names)
         """
         ### YOUR CODE HERE
-        self.input_placeholder= tf.placeholder(tf.float32, shape=(Config.batch_size, Config.n_features))
-        self.labels_placeholder = tf.placeholder(tf.float32, shape=(Config.batch_size, Config.n_classes))
+        self.input_placeholder= tf.placeholder(tf.int32, shape=(None, Config.n_features))
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, Config.n_classes))
         self.dropout_placeholder = tf.placeholder(tf.float32, shape=(1,))
         ### END YOUR CODE
 
@@ -104,7 +104,12 @@ class ParserModel(Model):
             embeddings: tf.Tensor of shape (None, n_features*embed_size)
         """
         ### YOUR CODE HERE
-        
+        params = tf.Variable(self.pretrained_embeddings)
+        embeddings = tf.nn.embedding_lookup( params,
+    self.input_placeholder)
+
+        embeddings = tf.reshape(embeddings, [-1, Config.n_features*Config.embed_size])
+
         ### END YOUR CODE
         return embeddings
 
@@ -131,6 +136,14 @@ class ParserModel(Model):
 
         x = self.add_embedding()
         ### YOUR CODE HERE
+        xavier_initializer = xavier_weight_init()
+        W = tf.Variable(xavier_initializer((Config.embed_size* Config.n_features,Config.hidden_size)),dtype=tf.float32)
+        U = tf.Variable(xavier_initializer([Config.hidden_size, Config.n_classes]),dtype=tf.float32)
+        b1 = tf.Variable(tf.zeros((Config.hidden_size,),dtype=tf.float32))
+        b2 = tf.Variable(tf.zeros((Config.n_classes,),dtype=tf.float32))
+        h = tf.nn.relu( tf.transpose(tf.matmul(x,W)) + b1)
+        h_drop = tf.nn.dropout(h, (1-Config.dropout))
+        pred = tf.matmul(h_drop,U) + b2
         ### END YOUR CODE
         return pred
 
@@ -147,7 +160,9 @@ class ParserModel(Model):
         Returns:
             loss: A 0-d tensor (scalar)
         """
-        ### YOUR CODE HERE
+        ### YOUR CODE HERE TBD
+        logit = tf.reduce_mean(pred, 1)
+        loss = tf.nn.softmax_cross_entropy_with_logits(labels = self.labels_placeholder, logits = logit, dim=-1 )        
         ### END YOUR CODE
         return loss
 
@@ -172,6 +187,7 @@ class ParserModel(Model):
             train_op: The Op for training.
         """
         ### YOUR CODE HERE
+        train_op = tf.train.AdamOptimizer(Config.lr).minimize(loss)
         ### END YOUR CODE
         return train_op
 
