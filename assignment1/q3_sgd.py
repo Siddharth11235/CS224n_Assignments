@@ -88,6 +88,7 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         ### YOUR CODE HERE
         (cost,gradient) = f(x)
         x -= step*gradient
+        
         ### END YOUR CODE
 
         if iter % PRINT_EVERY == 0:

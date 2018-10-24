@@ -56,7 +56,7 @@ class ParserModel(Model):
         ### YOUR CODE HERE
         self.input_placeholder= tf.placeholder(tf.int32, shape=(None, Config.n_features))
         self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, Config.n_classes))
-        self.dropout_placeholder = tf.placeholder(tf.float32, shape=(1,))
+        self.dropout_placeholder = tf.placeholder(tf.float32)
         ### END YOUR CODE
 
     def create_feed_dict(self, inputs_batch, labels_batch=None, dropout=0):
@@ -82,7 +82,12 @@ class ParserModel(Model):
             feed_dict: The feed dictionary mapping from placeholders to values.
         """
         ### YOUR CODE HERE
-        feed_dict = {self.input_placeholder:inputs_batch, self.labels_placeholder: labels_batch, dropout:Config.dropout}
+        feed_dict = {self.input_placeholder: inputs_batch, \
+                     self.dropout_placeholder: dropout, \
+                     }
+        if labels_batch is not None:
+            feed_dict[self.labels_placeholder] = labels_batch
+
         ### END YOUR CODE
         return feed_dict
 
@@ -141,8 +146,8 @@ class ParserModel(Model):
         U = tf.Variable(xavier_initializer([Config.hidden_size, Config.n_classes]),dtype=tf.float32)
         b1 = tf.Variable(tf.zeros((Config.hidden_size,),dtype=tf.float32))
         b2 = tf.Variable(tf.zeros((Config.n_classes,),dtype=tf.float32))
-        h = tf.nn.relu( tf.transpose(tf.matmul(x,W)) + b1)
-        h_drop = tf.nn.dropout(h, (1-Config.dropout))
+        h = tf.nn.relu((tf.matmul(x,W)) + b1)
+        h_drop = tf.nn.dropout(h, (1-self.dropout_placeholder))
         pred = tf.matmul(h_drop,U) + b2
         ### END YOUR CODE
         return pred
@@ -161,8 +166,8 @@ class ParserModel(Model):
             loss: A 0-d tensor (scalar)
         """
         ### YOUR CODE HERE TBD
-        logit = tf.reduce_mean(pred, 1)
-        loss = tf.nn.softmax_cross_entropy_with_logits(labels = self.labels_placeholder, logits = logit, dim=-1 )        
+        loss = tf.nn.softmax_cross_entropy_with_logits(labels = self.labels_placeholder, logits = pred, dim=-1 )
+        loss = tf.reduce_mean(loss)
         ### END YOUR CODE
         return loss
 
@@ -202,7 +207,8 @@ class ParserModel(Model):
         prog = tf.keras.utils.Progbar(target=n_minibatches)
         for i, (train_x, train_y) in enumerate(minibatches(train_examples, self.config.batch_size)):
             loss = self.train_on_batch(sess, train_x, train_y)
-            prog.update(i + 1, [("train loss", loss)], force=i + 1 == n_minibatches)
+            prog.update(i + 1, [("train loss", loss)])
+
 
         print "Evaluating on dev set",
         dev_UAS, _ = parser.parse(dev_set)
@@ -227,7 +233,7 @@ class ParserModel(Model):
         self.build()
 
 
-def main(debug=True):
+def main(debug=False):
     print 80 * "="
     print "INITIALIZING"
     print 80 * "="
