@@ -61,8 +61,19 @@ class RNNCell(tf.nn.rnn_cell.RNNCell):
         # It's always a good idea to scope variables in functions lest they
         # be defined elsewhere!
         with tf.variable_scope(scope):
+
             ### YOUR CODE HERE (~6-10 lines)
-            pass
+            xavier_initializer = tf.contrib.layers.xavier_initializer(uniform=True,
+            seed=None,
+            dtype=tf.float32)
+
+            W_x =  tf.get_variable("W_x", shape=(self.input_size,self.state_size),dtype=tf.float32, initializer=xavier_initializer)
+
+            W_h = tf.get_variable("W_h", shape=(self.state_size,self.state_size),dtype=tf.float32, initializer=xavier_initializer)
+            b = tf.get_variable("b", shape=(self.state_size,),dtype=tf.float32, initializer=tf.constant_initializer)
+            
+            z_t = tf.matmul(state,W_h) + tf.matmul(inputs,W_x) + b
+            new_state  = tf.nn.sigmoid(z_t)
             ### END YOUR CODE ###
         # For an RNN , the output and state are the same (N.B. this
         # isn't true for an LSTM, though we aren't using one of those in
